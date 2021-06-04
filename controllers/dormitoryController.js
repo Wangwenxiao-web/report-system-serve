@@ -1,22 +1,35 @@
 var dbconfig = require("../config/db.config")
+// 获取宿舍信息长度
+let getdormitoryLength = async (classinfo)=>{
+  var sql = 'select * from dormitory_info where className=?';
+  var sqlArr = [classinfo];
+  var result = await dbconfig.SySqlConnect(sql,sqlArr);
+  if(result.length){
+    return result.length;
+  }else {
+    return 0;
+  }
+}
 // 获取宿舍信息
-let getdormitory = (req,res)=>{
+let getdormitory = async (req,res)=>{
   let pageIndex = req.body.pageIndex-1;
   let pageSize = req.body.pageSize;
-    var sql = "select * from dormitory_info limit "+pageIndex*pageSize+","+pageSize;
-    var sqlArr = [pageIndex,pageSize];
-    var callBack = (err,data)=>{
-      if (err) {
-        console.log(err);
-        console.log("数据库连接失败");
-      }else{
-        res.send({
-          "data": data,
-          "total": 30
-        })
-      }
+  let classinfo = req.body.classinfo;
+  let total = await getdormitoryLength(classinfo);
+  var sql = "select * from dormitory_info where className=? limit "+pageIndex*pageSize+","+pageSize;
+  var sqlArr = [classinfo];
+  var callBack = (err,data)=>{
+    if (err) {
+      console.log(err);
+      console.log("数据库连接失败");
+    }else{
+      res.send({
+        "data": data,
+        "total": total
+      })
     }
-    dbconfig.sqlConnect(sql,sqlArr,callBack)
+  }
+  dbconfig.sqlConnect(sql,sqlArr,callBack)
 }
 // 获取交换信息
 let getExchangeInfo = (stuNo)=>{
@@ -31,8 +44,8 @@ let exchangeDormitory = (req,res)=>{
   let Now_No = req.body.Now_No;
   let Wish_No = req.body.Wish_No;
   let reason = req.body.reason;
-  let sql = `insert into exchange_application(studentNo,studentName,Now_dormitory_No,Wish_dormitory_No,reason) value(?,?,?,?,?)`;
-  let sqlArr = [stuNo,stuName,Now_No,Wish_No,reason];
+  var sql = `insert into exchange_application(studentNo,studentName,Now_dormitory_No,Wish_dormitory_No,reason) value(?,?,?,?,?)`;
+  var sqlArr = [stuNo,stuName,Now_No,Wish_No,reason];
   var callBack = async (err,data)=>{
     if(err){
       console.log(err);
